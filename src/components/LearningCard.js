@@ -39,11 +39,11 @@ export default function LearningCard({ objectName, data, onClose }) {
 
 const styles = StyleSheet.create({
   modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
-  card: { width: '90%', maxHeight: '80%', backgroundColor: 'white', borderRadius: 20, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5 },
-  title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 20, textTransform: 'capitalize' },
+  card: { width: '90%', maxHeight: '80%', backgroundColor: 'white', borderRadius: 20, padding: 25, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5 },
+  title: { fontFamily: 'Poppins-Bold', fontSize: 28, textAlign: 'center', marginBottom: 20, textTransform: 'capitalize', color: '#002B6B' },
   section: { marginBottom: 20 },
-  sectionTitle: { fontSize: 20, fontWeight: 'bold', color: '#333' },
-  sectionText: { fontSize: 16, color: '#555', marginTop: 5 },
-  closeButton: { backgroundColor: '#007AFF', borderRadius: 20, padding: 10, elevation: 2, marginTop: 15 },
-  closeButtonText: { color: 'white', fontWeight: 'bold', textAlign: 'center', fontSize: 18 }
+  sectionTitle: { fontFamily: 'Poppins-Bold', fontSize: 20, color: '#004AAD' },
+  sectionText: { fontFamily: 'Poppins-Regular', fontSize: 16, color: '#333333', marginTop: 5, lineHeight: 24 },
+  closeButton: { backgroundColor: '#004AAD', borderRadius: 20, padding: 12, elevation: 2, marginTop: 15 },
+  closeButtonText: { color: 'white', fontFamily: 'Poppins-Bold', textAlign: 'center', fontSize: 18 }
 });

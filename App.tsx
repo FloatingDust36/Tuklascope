@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Modal } fr
 import { CameraView, useCameraPermissions } from 'expo-camera'; 
 import { identifyObject, generateLearningCard } from './src/services/GeminiService';
 import LearningCard from './src/components/LearningCard';
+import { useFonts } from 'expo-font';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function App() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -11,6 +13,17 @@ export default function App() {
   const [learningData, setLearningData] = useState<any>(null);
   const [objectName, setObjectName] = useState('');
   const cameraRef = useRef<CameraView | null>(null);
+
+  const [tuklasPoints, setTuklasPoints] = useState(0);
+
+  const [fontsLoaded] = useFonts({
+    'Poppins-Regular': require('./assets/fonts/Poppins-Regular.ttf'),
+    'Poppins-Bold': require('./assets/fonts/Poppins-Bold.ttf'),
+  });
+
+  if (!fontsLoaded) {
+    return <ActivityIndicator style={{flex: 1}} />;
+  }
 
   if (!permission) {
     return <View />;
@@ -40,6 +53,7 @@ export default function App() {
               const cardData = await generateLearningCard(identified);
               setLearningData(cardData);
               setModalVisible(true);
+              setTuklasPoints(currentPoints => currentPoints + 10);
             } else {
               alert('Could not identify the object. Please try again.');
             }
@@ -57,6 +71,10 @@ export default function App() {
     <View style={styles.container}>
       <CameraView style={styles.camera} ref={cameraRef} facing="back" />
       
+      <View style={styles.scoreContainer}>
+        <Text style={styles.scoreText}>{tuklasPoints} TP</Text>
+      </View>
+
       {isLoading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color="#ffffff" />
@@ -66,7 +84,7 @@ export default function App() {
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.scanButton} onPress={handleScan} disabled={isLoading}>
-          <Text style={styles.buttonText}>SCAN</Text>
+          <Ionicons name="scan-outline" size={40} color="#004AAD" />
         </TouchableOpacity>
       </View>
       
@@ -88,12 +106,15 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  permissionContainer: { flex: 1, justifyContent: 'center', alignItems: 'center'},
+  permissionContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  permissionText: { fontFamily: 'Poppins-Bold', fontSize: 18, textAlign: 'center'},
+  permissionButton: { backgroundColor: '#004AAD', paddingVertical: 12, paddingHorizontal: 20, marginTop: 20, borderRadius: 10 },
+  permissionButtonText: { color: '#FFFFFF', fontFamily: 'Poppins-Bold', fontSize: 16 },
   camera: { flex: 1 },
   buttonContainer: { position: 'absolute', bottom: 50, alignSelf: 'center' },
-  scanButton: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', borderWidth: 4, borderColor: 'rgba(0,0,0,0.2)' },
-  buttonText: { fontSize: 16, fontWeight: 'bold', color: '#000' },
+  scanButton: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center', borderWidth: 4, borderColor: 'rgba(0,0,0,0.2)' },
   loadingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
-  loadingText: { color: '#fff', marginTop: 10, fontSize: 18 },
-  permissionButton: { backgroundColor: '#007AFF', paddingVertical: 12, paddingHorizontal: 20, marginTop: 20, borderRadius: 10 }
+  loadingText: { fontFamily: 'Poppins-Regular', color: '#FFFFFF', marginTop: 10, fontSize: 18 },
+  scoreContainer: { position: 'absolute', top: 60, right: 20, backgroundColor: 'rgba(0, 74, 173, 0.7)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20 },
+  scoreText: { fontFamily: 'Poppins-Bold', color: '#FFFFFF', fontSize: 18 },
 });
