@@ -49,3 +49,20 @@ export const generateLearningCard = async (objectName) => {
     throw error;
   }
 };
+
+export const getDeeperExplanation = async (conversationHistory) => {
+  const prompt = `
+    You are 'Tuklascope,' an AI science guide. The user is asking "Why?" about the last fact you provided.
+    Here is the conversation so far: ${conversationHistory}.
+    Provide a simple, concise explanation that answers the implied "Why?" question.
+  `;
+
+  try {
+    const requestBody = { contents: [{ parts: [{ text: prompt }] }] };
+    const response = await axios.post(GOOGLE_GENERATIVE_AI_TEXT_URL, requestBody);
+    return response.data.candidates[0].content.parts[0].text.trim();
+  } catch (error) {
+    console.error("Error in getDeeperExplanation:", error.response ? error.response.data : error.message);
+    return "I'm not sure how to explain that further.";
+  }
+};
