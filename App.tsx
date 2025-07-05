@@ -8,10 +8,22 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
 import JournalScreen from './src/screens/JournalScreen';
 
-export default function App() {
+type RootStackParamList = {
+  Camera: undefined;
+  Journal: undefined;
+};
+type CameraScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Camera'>;
+
+interface Discovery {
+  objectName: string;
+  learningData: any;
+  date: Date;
+}
+
+function CameraScreen({ navigation }: { navigation: CameraScreenNavigationProp }) {
   const [permission, requestPermission] = useCameraPermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -41,7 +53,7 @@ export default function App() {
     );
   }
 
-  const saveDiscovery = async (discovery) => {
+  const saveDiscovery = async (discovery: Discovery) => {
         const existingDiscoveries = await AsyncStorage.getItem('@discoveries');
         const discoveries = existingDiscoveries ? JSON.parse(existingDiscoveries) : [];
         discoveries.unshift(discovery); // Add new discovery to the top
@@ -49,6 +61,7 @@ export default function App() {
     };
 
   const handleScan = async () => {
+    if (!cameraRef.current) return; 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsLoading(true);
     try {
