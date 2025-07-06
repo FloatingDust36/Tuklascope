@@ -1,0 +1,38 @@
+[
+  {
+    "id": "1",
+    "name": "Data Analyst",
+    "description": "Analyzes large datasets to identify trends, develop charts, and create visual presentations to help businesses make strategic decisions.",
+    "tags": ["STEM", "Technology"]
+  },
+  {
+    "id": "2",
+    "name": "Software QA Engineer",
+    "description": "Tests software to find bugs and issues before a product is released to the public, ensuring a high-quality user experience.",
+    "tags": ["Technology", "Systems"]
+  },
+  {
+    "id": "3",
+    "name": "Network Engineer",
+    "description": "Designs, builds, and manages the computer networks that power global communication for large companies.",
+    "tags": ["STEM", "Technology", "Engineering"]
+  },
+  {
+    "id": "4",
+    "name": "Cybersecurity Analyst",
+    "description": "Protects computer systems and networks from security breaches and cyberattacks.",
+    "tags": ["Technology"]
+  },
+  {
+    "id": "5",
+    "name": "UI/UX Designer",
+    "description": "Designs the look, feel, and interaction of mobile apps and websites to make them easy and enjoyable to use.",
+    "tags": ["Design", "Innovation"]
+  },
+  {
+    "id": "6",
+    "name": "Robotics Process Automation",
+    "description": "Builds 'bots' to automate repetitive business processes, increasing efficiency and allowing humans to focus on more creative tasks.",
+    "tags": ["Technology", "Innovation", "Engineering"]
+  }
+]

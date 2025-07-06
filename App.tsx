@@ -1,141 +1,74 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
-import { CameraView, useCameraPermissions } from 'expo-camera'; 
-import { identifyObject, generateLearningCard } from './src/services/GeminiService';
-import LearningCard from './src/components/LearningCard';
-import { useFonts } from 'expo-font';
-import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NavigationContainer } from '@react-navigation/native';
+import React from 'react';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
-import JournalScreen from './src/screens/JournalScreen';
+import { Ionicons } from '@expo/vector-icons';
+import { useFonts } from 'expo-font';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type RootStackParamList = {
-  Camera: undefined;
-  Journal: undefined;
+import { JournalScreen } from './src/screens/JournalScreen';
+import { HomeScreen } from './src/screens/HomeScreen';
+import { CareerScreen } from './src/screens/CareerScreen';
+import { ProfileScreen } from './src/screens/ProfileScreen';
+import { CameraScreen } from './src/screens/CameraScreen'; 
+
+export type RootStackParamList = {
+  MainTabs: undefined;
+  CameraModal: undefined;
 };
-type CameraScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Camera'>;
+export type TabParamList = {
+  Home: undefined;
+  Journal: undefined;
+  ScanTab: undefined;
+  Career: undefined;
+  Profile: undefined;
+};
+type AppNavigationProp = StackNavigationProp<RootStackParamList>;
 
-interface Discovery {
-  objectName: string;
-  learningData: any;
-  date: Date;
-}
-
-function CameraScreen({ navigation }: { navigation: CameraScreenNavigationProp }) {
-  const [permission, requestPermission] = useCameraPermissions();
-  const [isLoading, setIsLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [learningData, setLearningData] = useState<any>(null);
-  const [objectName, setObjectName] = useState('');
-  const cameraRef = useRef<CameraView | null>(null);
-  const [tuklasPoints, setTuklasPoints] = useState(0);
-
-  const loadPoints = async () => {
-        const points = await AsyncStorage.getItem('@tuklasPoints');
-        setTuklasPoints(points != null ? parseInt(points, 10) : 0);
-    };
-    useEffect(() => { loadPoints() }, []);
-
-  if (!permission) {
-    return <View />;
-  }
-
-  if (!permission.granted) {
-    return (
-      <View style={styles.permissionContainer}>
-        <Text style={styles.permissionText}>We need your permission to show the camera</Text>
-        <TouchableOpacity onPress={requestPermission} style={styles.permissionButton}>
-          <Text style={styles.permissionButtonText}>Grant Permission</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  const saveDiscovery = async (discovery: Discovery) => {
-        const existingDiscoveries = await AsyncStorage.getItem('@discoveries');
-        const discoveries = existingDiscoveries ? JSON.parse(existingDiscoveries) : [];
-        discoveries.unshift(discovery); // Add new discovery to the top
-        await AsyncStorage.setItem('@discoveries', JSON.stringify(discoveries));
-    };
-
-  const handleScan = async () => {
-    if (!cameraRef.current) return; 
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setIsLoading(true);
-    try {
-      const photo = await cameraRef.current.takePictureAsync({ quality: 0.5 });
-      if (photo) {
-          const identified = await identifyObject(photo.uri);
-          setObjectName(identified);
-
-          if (identified && identified !== "Could not identify object") {
-            const cardData = await generateLearningCard(identified);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            setLearningData(cardData);
-            setModalVisible(true);
-            const newPoints = tuklasPoints + 10;
-            setTuklasPoints(newPoints);
-            await AsyncStorage.setItem('@tuklasPoints', newPoints.toString());
-            await saveDiscovery({ objectName: identified, learningData: cardData, date: new Date() });
-          } else {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            alert('Could not identify the object. Please try again.');
-          }
-      }
-    } catch (error) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      console.error("Scan failed:", error);
-      alert('An error occurred during the scan.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+const ScanButton = () => {
+  const navigation = useNavigation<AppNavigationProp>();
   return (
-    <View style={styles.container}>
-      <CameraView style={styles.camera} ref={cameraRef} facing="back" />
-      
-      <View style={styles.headerButtons}>
-          <TouchableOpacity onPress={() => navigation.navigate('Journal')} style={styles.headerButton}>
-              <Ionicons name="journal-outline" size={32} color="white" />
-          </TouchableOpacity>
-          <View style={styles.scoreContainer}>
-              <Text style={styles.scoreText}>{tuklasPoints} TP</Text>
-          </View>
-      </View>
+    <TouchableOpacity
+      style={styles.scanButtonContainer}
+      onPress={() => navigation.navigate('CameraModal')}
+    >
+      <View style={styles.scanButtonInner} />
+    </TouchableOpacity>
+  );
+};
 
-      {isLoading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#ffffff" />
-          <Text style={styles.loadingText}>Tuklascope is thinking...</Text>
-        </View>
-      )}
+const EmptyComponent = () => null;
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.scanButton} onPress={handleScan} disabled={isLoading}>
-          <Ionicons name="scan-outline" size={40} color="#004AAD" />
-        </TouchableOpacity>
-      </View>
-      
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <LearningCard 
-          objectName={objectName} 
-          data={learningData} 
-          onClose={() => setModalVisible(false)} 
-        />
-      </Modal>
-    </View>
+const Tab = createBottomTabNavigator<TabParamList>();
+const RootStack = createStackNavigator<RootStackParamList>();
+
+function MainTabs() {
+  const insets = useSafeAreaInsets();
+  
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarShowLabel: false,
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            bottom: insets.bottom + 5, 
+          }
+        ],
+        tabBarInactiveTintColor: '#8e8e93',
+        tabBarActiveTintColor: '#007AFF',
+      }}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarIcon: ({ color, size }) => (<Ionicons name="home-outline" size={size} color={color} />) }} />
+      <Tab.Screen name="Journal" component={JournalScreen} options={{ tabBarIcon: ({ color, size }) => (<Ionicons name="journal-outline" size={size} color={color} />) }} />
+      <Tab.Screen name="ScanTab" component={EmptyComponent} options={{ tabBarButton: ScanButton }} />
+      <Tab.Screen name="Career" component={CareerScreen} options={{ tabBarIcon: ({ color, size }) => (<Ionicons name="briefcase-outline" size={size} color={color} />) }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarIcon: ({ color, size }) => (<Ionicons name="person-outline" size={size} color={color} />) }} />
+    </Tab.Navigator>
   );
 }
-
-const Stack = createStackNavigator();
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -144,32 +77,34 @@ export default function App() {
   });
 
   if (!fontsLoaded) {
-    return <ActivityIndicator style={{flex: 1}} />;
+    return null; 
   }
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Camera" component={CameraScreen} />
-        <Stack.Screen name="Journal" component={JournalScreen} />
-      </Stack.Navigator>
+      <RootStack.Navigator>
+        <RootStack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
+        <RootStack.Screen name="CameraModal" component={CameraScreen} options={{ headerShown: false, presentation: 'modal' }} />
+      </RootStack.Navigator>
     </NavigationContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  permissionContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#f0f4f8' },
-  permissionText: { fontFamily: 'Poppins-Bold', fontSize: 18, textAlign: 'center'},
-  permissionButton: { backgroundColor: '#004AAD', paddingVertical: 12, paddingHorizontal: 20, marginTop: 20, borderRadius: 10 },
-  permissionButtonText: { color: '#FFFFFF', fontFamily: 'Poppins-Bold', fontSize: 16 },
-  camera: { flex: 1 },
-  headerButtons: { position: 'absolute', top: 60, left: 20, right: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  headerButton: { padding: 8, backgroundColor: 'rgba(0, 74, 173, 0.7)', borderRadius: 25 },
-  scoreContainer: { backgroundColor: 'rgba(0, 74, 173, 0.7)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20 },
-  scoreText: { fontFamily: 'Poppins-Bold', color: '#FFFFFF', fontSize: 18 },
-  buttonContainer: { position: 'absolute', bottom: 50, alignSelf: 'center' },
-  scanButton: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center', borderWidth: 4, borderColor: 'rgba(0,0,0,0.2)' },
-  loadingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
-  loadingText: { fontFamily: 'Poppins-Regular', color: '#FFFFFF', marginTop: 10, fontSize: 18 },
+  tabBar: {
+    position: 'absolute',
+    bottom: 15,
+    left: 20,
+    right: 20,
+    elevation: 0,
+    backgroundColor: '#ffffff',
+    borderRadius: 15,
+    height: 65,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+  },
+  scanButtonContainer: { top: -30, justifyContent: 'center', alignItems: 'center', width: 70, height: 70, borderRadius: 35, backgroundColor: '#007AFF', elevation: 5, shadowColor: '#007AFF', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.25, shadowRadius: 10,},
+  scanButtonInner: { width: 60, height: 60, borderRadius: 30, backgroundColor: 'white' }
 });
